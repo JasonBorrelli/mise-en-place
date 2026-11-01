@@ -1,0 +1,72 @@
+CREATE DATABASE IF NOT EXISTS mise_en_place
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE mise_en_place;
+
+CREATE TABLE stores (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  address VARCHAR(255) NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  phone VARCHAR(30) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employees (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  store_id INT UNSIGNED NOT NULL,
+  first_name VARCHAR(80) NOT NULL,
+  last_name VARCHAR(80) NOT NULL,
+  email VARCHAR(150) NULL UNIQUE,
+  role ENUM('manager','cassa','cucina','sala') NOT NULL DEFAULT 'sala',
+  hourly_cost DECIMAL(6,2) NOT NULL,
+  hired_at DATE NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  FOREIGN KEY (store_id) REFERENCES stores(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE shifts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  employee_id INT UNSIGNED NOT NULL,
+  store_id INT UNSIGNED NOT NULL,
+  shift_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  notes VARCHAR(255) NULL,
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (store_id) REFERENCES stores(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT chk_shift_times CHECK (end_time > start_time)
+);
+
+CREATE TABLE ingredients (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL UNIQUE,
+  unit ENUM('kg','l','pz') NOT NULL,
+  unit_cost DECIMAL(8,3) NOT NULL,
+  supplier VARCHAR(120) NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE recipes (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL UNIQUE,
+  category VARCHAR(60) NULL,
+  description TEXT NULL,
+  image_url VARCHAR(255) NULL,
+  selling_price DECIMAL(6,2) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE recipe_ingredients (
+  recipe_id INT UNSIGNED NOT NULL,
+  ingredient_id INT UNSIGNED NOT NULL,
+  quantity DECIMAL(8,3) NOT NULL,
+  PRIMARY KEY (recipe_id, ingredient_id),
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+);
